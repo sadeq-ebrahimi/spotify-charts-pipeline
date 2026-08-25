@@ -11,3 +11,5 @@ __pycache__/
 dbt_packages/
 target/
 logs/
+infra/terraform.tfvars/
+data_tmp/
