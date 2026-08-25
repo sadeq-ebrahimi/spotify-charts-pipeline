@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+*.csv
+*.parquet
+.terraform/
+*.tfstate
+*.tfstate.backup
+.DS_Store
+dbt_packages/
+target/
+logs/
