@@ -1,9 +1,19 @@
+
+############################################################
+
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
+
+from azure.storage.blob import (
+    BlobServiceClient,
+    generate_blob_sas,
+    BlobSasPermissions,
+    generate_container_sas,
+    ContainerSasPermissions,
+)
 
 import pyodbc
 from dotenv import load_dotenv
-from azure.storage.blob import BlobServiceClient, generate_container_sas, ContainerSasPermissions
 
 load_dotenv()
 
@@ -18,8 +28,9 @@ SQL_USER = os.environ["AZURE_SQL_USER"]
 SQL_PASSWORD = os.environ["AZURE_SQL_PASSWORD"]
 MASTER_KEY_PASSWORD = os.environ["SQL_MASTER_KEY_PASSWORD"]
 
-
-def generate_sas_token() -> str:
+#####################################################################################################
+########## GENERATE SAS TOKEN  ######################################################################
+''' def generate_sas_token() -> str:
     blob_service = BlobServiceClient.from_connection_string(CONNECTION_STRING)
     account_key = blob_service.credential.account_key
 
@@ -28,11 +39,27 @@ def generate_sas_token() -> str:
         container_name=CONTAINER,
         account_key=account_key,
         permission=ContainerSasPermissions(read=True, list=True),
-        expiry=datetime.utcnow() + timedelta(hours=2),
+        expiry=datetime.now(UTC) + timedelta(hours=2),
     )
     return sas_token
+'''
 
+def generate_sas_token() -> str:
+    blob_service = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    account_key = blob_service.credential.account_key
 
+    sas_token = generate_blob_sas(
+        account_name=STORAGE_ACCOUNT,
+        container_name=CONTAINER,
+        blob_name=BLOB_NAME,
+        account_key=account_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=datetime.now(UTC) + timedelta(hours=2),
+    )
+
+    return sas_token
+
+#########################################################################################à
 def get_connection():
     conn_str = (
         f"DRIVER={{ODBC Driver 18 for SQL Server}};"
@@ -52,6 +79,17 @@ def run_sql_file(cursor, path: str, **format_args):
 
 def main():
     sas_token = generate_sas_token()
+    ###########################################################
+    print("SAS generated:", sas_token[:20], "...")
+    from urllib.parse import parse_qs
+
+    params = parse_qs(sas_token)
+
+    print("SAS permissions:", params.get("sp"))
+    print("SAS resource:", params.get("sr"))
+    print("SAS expiry:", params.get("se"))
+    print("SAS version:", params.get("sv"))
+    ########################################################
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -92,7 +130,18 @@ def main():
 
     cursor.close()
     conn.close()
+#####################################################################
+from azure.storage.blob import BlobServiceClient
 
+blob_service = BlobServiceClient.from_connection_string(CONNECTION_STRING)
 
+blob = blob_service.get_blob_client(
+    container=CONTAINER,
+    blob=BLOB_NAME
+)
+
+print("Blob exists:", blob.exists())
+print("Blob size:", blob.get_blob_properties().size)
+################################################################
 if __name__ == "__main__":
     main()
