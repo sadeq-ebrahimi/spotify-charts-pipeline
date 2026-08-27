@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: stg_spotify_charts
+    columns:
+      - name: title
+        tests:
+          - not_null
+      - name: chart_date
+        tests:
+          - not_null
+      - name: streams
+        tests:
+          - not_null

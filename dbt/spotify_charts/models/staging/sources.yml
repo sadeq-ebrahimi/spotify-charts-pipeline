@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: dbo
+    tables:
+      - name: spotify_charts_raw
+        description: "Raw Spotify daily charts data, loaded via BULK INSERT from Blob Storage"
